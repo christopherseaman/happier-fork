@@ -45,6 +45,11 @@ test('production macOS tauri workflow hard-fails when signing/notarization secre
     /\bexit 1\b/,
     'workflow fail gate should exit with status 1'
   );
+  assert.match(
+    runScript,
+    /minisign.*not.*pem/i,
+    'workflow fail gate should explain that updater signing expects minisign keys, not PEM private keys'
+  );
 
   const warningStep = buildSteps.find(
     (step) => String(step?.name ?? '').includes('Warn when production notarization is skipped')
@@ -132,6 +137,11 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
     (step) => step?.name === 'Notarize macOS artifacts (updater + DMG) (macOS)'
   );
   assert.ok(notarizeStep, 'workflow should contain macOS notarization step');
+  assert.match(
+    String(notarizeStep.if ?? ''),
+    /inputs\.environment == 'production'/,
+    'macOS notarization should run only for production tauri releases'
+  );
   const notarizeScript = String(notarizeStep.run ?? '');
   assert.match(
     notarizeScript,
