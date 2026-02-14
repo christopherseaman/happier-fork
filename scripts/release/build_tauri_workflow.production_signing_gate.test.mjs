@@ -121,6 +121,11 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
     /rustup target add "\$\{TAURI_TARGET\}"/,
     'desktop build should ensure TAURI_TARGET is installed before invoking tauri build'
   );
+  assert.match(
+    buildScript,
+    /if \[ "\$\{\{ inputs\.environment \}\}" = "preview" \] && \[ "\$\{RUNNER_OS\}" = "macOS" \]; then[\s\S]*--bundles app/,
+    'preview macOS tauri builds should disable DMG bundling and build updater app artifacts only'
+  );
 
   const versionStep = buildSteps.find((step) => step?.name === 'Compute build version');
   assert.ok(versionStep, 'workflow should compute build version for tauri builds');

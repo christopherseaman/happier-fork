@@ -313,7 +313,11 @@ jobs:
               const version = String(process.env.VERSION_OVERRIDE ?? "");
               fs.writeFileSync(out, `${JSON.stringify({ version })}\n`, "utf8");
             ' "${override}"
-            yarn tauri build --config src-tauri/tauri.preview.conf.json --config "${override}" "${configs[@]}" "${target_args[@]}"
+            preview_bundle_args=()
+            if [ "${{ inputs.environment }}" = "preview" ] && [ "${RUNNER_OS}" = "macOS" ]; then
+              preview_bundle_args+=(--bundles app)
+            fi
+            yarn tauri build --config src-tauri/tauri.preview.conf.json --config "${override}" "${preview_bundle_args[@]}" "${configs[@]}" "${target_args[@]}"
           else
             yarn tauri build "${configs[@]}" "${target_args[@]}"
           fi
