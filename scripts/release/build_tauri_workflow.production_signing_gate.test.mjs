@@ -161,6 +161,16 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
     /\*\.AppImage\.sig/,
     'linux updater collection should match AppImage signature files emitted by tauri'
   );
+  assert.match(
+    collectScript,
+    /\*\.msi\.sig/,
+    'windows updater collection should match MSI signature files emitted by tauri'
+  );
+  assert.match(
+    collectScript,
+    /\*\.exe\.sig/,
+    'windows updater collection should match NSIS executable signature files emitted by tauri'
+  );
 
   const notarizeStep = buildSteps.find(
     (step) => step?.name === 'Notarize macOS artifacts (updater + DMG) (macOS)'

@@ -461,21 +461,53 @@ jobs:
               sig_matches=()
               while IFS= read -r match; do
                 sig_matches+=("${match}")
-              done < <(find "${search_dir}" -path '*/release/bundle/*' -type f \( -name '*.msi.zip.sig' -o -name '*.exe.zip.sig' -o -name '*.nsis.zip.sig' \) | sort)
+              done < <(find "${search_dir}" -path '*/release/bundle/*' -type f \( -name '*.msi.sig' -o -name '*.exe.sig' -o -name '*.msi.zip.sig' -o -name '*.exe.zip.sig' -o -name '*.nsis.zip.sig' \) | sort)
               if [ "${#sig_matches[@]}" -lt 1 ]; then
                 echo "Expected at least one updater signature for PLATFORM_KEY=${PLATFORM_KEY} under ${search_dir}; found 0" >&2
                 exit 1
               fi
               preferred_sig=""
               for candidate in "${sig_matches[@]}"; do
-                if [[ "${candidate}" == *.nsis.zip.sig ]]; then
+                if [[ "${candidate}" == *-setup.exe.sig ]]; then
                   preferred_sig="${candidate}"
                   break
                 fi
               done
               if [ -z "${preferred_sig}" ]; then
                 for candidate in "${sig_matches[@]}"; do
+                  if [[ "${candidate}" == *.exe.sig ]]; then
+                    preferred_sig="${candidate}"
+                    break
+                  fi
+                done
+              fi
+              if [ -z "${preferred_sig}" ]; then
+                for candidate in "${sig_matches[@]}"; do
+                  if [[ "${candidate}" == *.nsis.zip.sig ]]; then
+                    preferred_sig="${candidate}"
+                    break
+                  fi
+                done
+              fi
+              if [ -z "${preferred_sig}" ]; then
+                for candidate in "${sig_matches[@]}"; do
+                  if [[ "${candidate}" == *.msi.sig ]]; then
+                    preferred_sig="${candidate}"
+                    break
+                  fi
+                done
+              fi
+              if [ -z "${preferred_sig}" ]; then
+                for candidate in "${sig_matches[@]}"; do
                   if [[ "${candidate}" == *.exe.zip.sig ]]; then
+                    preferred_sig="${candidate}"
+                    break
+                  fi
+                done
+              fi
+              if [ -z "${preferred_sig}" ]; then
+                for candidate in "${sig_matches[@]}"; do
+                  if [[ "${candidate}" == *.msi.zip.sig ]]; then
                     preferred_sig="${candidate}"
                     break
                   fi
@@ -541,6 +573,9 @@ jobs:
           artifact_filename="$(basename "${artifact_path}")"
           ext=""
           case "${artifact_filename}" in
+            *.msi) ext=".msi" ;;
+            *.exe) ext=".exe" ;;
+            *.nsis) ext=".nsis" ;;
             *.msi.zip) ext=".msi.zip" ;;
             *.exe.zip) ext=".exe.zip" ;;
             *.nsis.zip) ext=".nsis.zip" ;;
