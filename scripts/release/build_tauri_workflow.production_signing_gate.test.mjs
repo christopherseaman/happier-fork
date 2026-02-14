@@ -78,4 +78,25 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
     /security find-identity -v -p codesigning 2>&1/,
     'identity lookup should capture stderr output so valid identities are parsed reliably'
   );
+  assert.match(
+    runScript,
+    /awk -F/,
+    'identity lookup should use stable field parsing instead of fragile escaped sed groups'
+  );
+  assert.doesNotMatch(
+    runScript,
+    /\\\(/,
+    'identity parsing should not rely on double-escaped sed capture groups'
+  );
+
+  const tauriBuildStep = buildSteps.find(
+    (step) => step?.name === 'Build desktop updater artifacts'
+  );
+  assert.ok(tauriBuildStep, 'workflow should contain the desktop build step');
+  const ciEnvValue = String(tauriBuildStep?.env?.CI ?? '');
+  assert.match(
+    ciEnvValue,
+    /^true$/i,
+    'desktop tauri builds should set CI=true to satisfy tauri-cli boolean parsing'
+  );
 });

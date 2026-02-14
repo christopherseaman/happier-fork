@@ -202,7 +202,7 @@ jobs:
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
           set -euo pipefail
-          identity="$(security find-identity -v -p codesigning 2>&1 | sed -n 's/.*\"\\(Developer ID Application:.*\\)\".*/\\1/p' | head -n 1)"
+          identity="$(security find-identity -v -p codesigning 2>&1 | awk -F '"' '/Developer ID Application:/ { print $2; exit }')"
           if [ -z "${identity:-}" ]; then
             echo "Unable to find Developer ID Application identity after importing certificate." >&2
             security find-identity -v -p codesigning || true
@@ -244,7 +244,7 @@ jobs:
 
       - name: Build desktop updater artifacts
         env:
-          CI: "1"
+          CI: "true"
           APP_ENV: ${{ inputs.environment }}
           TAURI_TARGET: ${{ matrix.tauri_target }}
           APPLE_SIGNING_IDENTITY: ${{ steps.apple_id.outputs.identity }}
