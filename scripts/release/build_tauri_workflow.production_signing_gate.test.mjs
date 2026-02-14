@@ -99,4 +99,33 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
     /^true$/i,
     'desktop tauri builds should set CI=true to satisfy tauri-cli boolean parsing'
   );
+
+  const buildScript = String(tauriBuildStep?.run ?? '');
+  assert.match(
+    buildScript,
+    /rustup target add "\$\{TAURI_TARGET\}"/,
+    'desktop build should ensure TAURI_TARGET is installed before invoking tauri build'
+  );
+
+  const collectStep = buildSteps.find(
+    (step) => step?.name === 'Collect updater artifact + signature'
+  );
+  assert.ok(collectStep, 'workflow should contain updater artifact collection step');
+  const collectScript = String(collectStep.run ?? '');
+  assert.match(
+    collectScript,
+    /\*\.AppImage\.sig/,
+    'linux updater collection should match AppImage signature files emitted by tauri'
+  );
+
+  const notarizeStep = buildSteps.find(
+    (step) => step?.name === 'Notarize macOS artifacts (updater + DMG) (macOS)'
+  );
+  assert.ok(notarizeStep, 'workflow should contain macOS notarization step');
+  const notarizeScript = String(notarizeStep.run ?? '');
+  assert.match(
+    notarizeScript,
+    /replaceAll\("\\\\n", "\\n"\)|replaceAll\('\\\\n', '\\n'\)/,
+    'notarization should normalize escaped newline private key secrets before writing the key file'
+  );
 });

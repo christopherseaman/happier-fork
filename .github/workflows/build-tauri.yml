@@ -257,6 +257,10 @@ jobs:
           set -euo pipefail
           cd apps/ui
 
+          if [ -n "${TAURI_TARGET}" ]; then
+            rustup target add "${TAURI_TARGET}"
+          fi
+
           target_args=()
           if [ -n "${TAURI_TARGET}" ]; then
             target_args+=(--target "${TAURI_TARGET}")
@@ -348,11 +352,12 @@ jobs:
           fi
 
           key_path="${RUNNER_TEMP}/apple-notary.p8"
-          if printf "%s" "${APPLE_API_PRIVATE_KEY}" | grep -q "BEGIN PRIVATE KEY"; then
-            printf "%s" "${APPLE_API_PRIVATE_KEY}" > "${key_path}"
+          normalized_notary_key="$(node -e 'const raw=String(process.env.APPLE_API_PRIVATE_KEY ?? ""); process.stdout.write(raw.includes("\\n") ? raw.replaceAll("\\n", "\n") : raw);')"
+          if printf "%s" "${normalized_notary_key}" | grep -q "BEGIN PRIVATE KEY"; then
+            printf "%s" "${normalized_notary_key}" > "${key_path}"
           else
             # Support storing the key as base64 (common for multi-line secrets).
-            printf "%s" "${APPLE_API_PRIVATE_KEY}" | base64 --decode > "${key_path}"
+            printf "%s" "${normalized_notary_key}" | base64 --decode > "${key_path}"
           fi
           chmod 600 "${key_path}"
 
@@ -474,7 +479,7 @@ jobs:
               sig_matches=()
               while IFS= read -r match; do
                 sig_matches+=("${match}")
-              done < <(find "${search_dir}" -path '*/release/bundle/*' -type f \( -name '*.AppImage.tar.gz.sig' -o -name '*.appimage.tar.gz.sig' \) | sort)
+              done < <(find "${search_dir}" -path '*/release/bundle/*' -type f \( -name '*.AppImage.sig' -o -name '*.appimage.sig' -o -name '*.AppImage.tar.gz.sig' -o -name '*.appimage.tar.gz.sig' \) | sort)
               if [ "${#sig_matches[@]}" -ne 1 ]; then
                 echo "Expected exactly one updater signature for PLATFORM_KEY=${PLATFORM_KEY} under ${search_dir}; found ${#sig_matches[@]}" >&2
                 if [ "${#sig_matches[@]}" -gt 0 ]; then

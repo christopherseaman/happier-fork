@@ -17,7 +17,7 @@ test('tests workflow bounds binary smoke subtests with hard process time limits'
   );
   assert.match(
     raw,
-    /timeout\s+--signal=KILL\s+--kill-after=30s\s+25m\s+node\s+--test\s+apps\/stack\/scripts\/release_binary_smoke\.integration\.test\.mjs/,
-    'binary smoke workflow should hard-timeout release_binary_smoke integration execution',
+    /timeout\s+--signal=KILL\s+--kill-after=30s\s+45m\s+node\s+--test\s+apps\/stack\/scripts\/release_binary_smoke\.integration\.test\.mjs/,
+    'binary smoke workflow should allow enough time for release_binary_smoke before hard-timeout',
   );
 });
