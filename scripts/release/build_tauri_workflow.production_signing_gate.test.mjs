@@ -145,6 +145,16 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
   );
   assert.match(
     notarizeScript,
+    /export TAURI_PRIVATE_KEY=/,
+    'notarization should map signing key to TAURI_PRIVATE_KEY for tauri signer CLI'
+  );
+  assert.match(
+    notarizeScript,
+    /TAURI_PRIVATE_KEY_PASSWORD/,
+    'notarization should map signing password to TAURI_PRIVATE_KEY_PASSWORD for tauri signer CLI'
+  );
+  assert.match(
+    notarizeScript,
     /normalized_tauri_signing_key.*replaceAll/,
     'notarization should normalize escaped newline updater signing keys before re-signing artifacts'
   );
