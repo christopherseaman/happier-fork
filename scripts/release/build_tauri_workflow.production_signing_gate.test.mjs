@@ -138,4 +138,14 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
     /replaceAll\("\\\\n", "\\n"\)|replaceAll\('\\\\n', '\\n'\)/,
     'notarization should normalize escaped newline private key secrets before writing the key file'
   );
+  assert.match(
+    notarizeScript,
+    /process\.env\.TAURI_SIGNING_PRIVATE_KEY/,
+    'notarization should read TAURI_SIGNING_PRIVATE_KEY for updater re-signing'
+  );
+  assert.match(
+    notarizeScript,
+    /normalized_tauri_signing_key.*replaceAll/,
+    'notarization should normalize escaped newline updater signing keys before re-signing artifacts'
+  );
 });

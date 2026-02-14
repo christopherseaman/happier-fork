@@ -389,6 +389,12 @@ jobs:
           artifact_abs="$(cd "$(dirname "${artifact_path}")" && pwd)/$(basename "${artifact_path}")"
           sig_abs="$(cd "$(dirname "${sig_path}")" && pwd)/$(basename "${sig_path}")"
           tmp_sig="${work}/notarized.sig"
+          normalized_tauri_signing_key="$(node -e 'const raw=String(process.env.TAURI_SIGNING_PRIVATE_KEY ?? ""); process.stdout.write(raw.includes("\\n") ? raw.replaceAll("\\n", "\n") : raw);')"
+          if printf "%s" "${normalized_tauri_signing_key}" | grep -q "BEGIN"; then
+            export TAURI_SIGNING_PRIVATE_KEY="${normalized_tauri_signing_key}"
+          else
+            export TAURI_SIGNING_PRIVATE_KEY="$(printf "%s" "${normalized_tauri_signing_key}" | base64 --decode)"
+          fi
           yarn --silent tauri signer sign "${artifact_abs}" > "${tmp_sig}"
           sig_value="$(tr -d '\r\n' < "${tmp_sig}")"
           if [ -z "${sig_value}" ] || ! printf "%s" "${sig_value}" | grep -Eq '^[A-Za-z0-9+/=]+$'; then
