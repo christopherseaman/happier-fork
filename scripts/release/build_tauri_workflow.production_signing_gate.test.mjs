@@ -103,6 +103,16 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
   const buildScript = String(tauriBuildStep?.run ?? '');
   assert.match(
     buildScript,
+    /yarn -s workspace @happier-dev\/agents build/,
+    'desktop build should compile @happier-dev/agents before expo web export'
+  );
+  assert.match(
+    buildScript,
+    /yarn -s workspace @happier-dev\/protocol build/,
+    'desktop build should compile @happier-dev/protocol before expo web export'
+  );
+  assert.match(
+    buildScript,
     /rustup target add "\$\{TAURI_TARGET\}"/,
     'desktop build should ensure TAURI_TARGET is installed before invoking tauri build'
   );
