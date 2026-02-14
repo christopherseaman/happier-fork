@@ -122,6 +122,20 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
     'desktop build should ensure TAURI_TARGET is installed before invoking tauri build'
   );
 
+  const versionStep = buildSteps.find((step) => step?.name === 'Compute build version');
+  assert.ok(versionStep, 'workflow should compute build version for tauri builds');
+  const versionScript = String(versionStep.run ?? '');
+  assert.match(
+    versionScript,
+    /preview_number="\$\(\(\s*GITHUB_RUN_NUMBER % 65535\s*\)\)"/,
+    'preview tauri versions should bound prerelease numeric identifier to MSI-supported range'
+  );
+  assert.match(
+    versionScript,
+    /if \[ "\$\{preview_number\}" -eq 0 \]; then/,
+    'preview tauri versions should avoid zero prerelease identifier after modulo wrap'
+  );
+
   const collectStep = buildSteps.find(
     (step) => step?.name === 'Collect updater artifact + signature'
   );

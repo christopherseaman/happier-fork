@@ -235,7 +235,11 @@ jobs:
             exit 1
           fi
           if [ "${{ inputs.environment }}" = "preview" ]; then
-            build_version="${ui_version}-preview.${GITHUB_RUN_NUMBER}"
+            preview_number="$(( GITHUB_RUN_NUMBER % 65535 ))"
+            if [ "${preview_number}" -eq 0 ]; then
+              preview_number=65535
+            fi
+            build_version="${ui_version}-preview.${preview_number}"
           else
             build_version="${ui_version}"
           fi
