@@ -135,6 +135,16 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
     /if \[ "\$\{preview_number\}" -eq 0 \]; then/,
     'preview tauri versions should avoid zero prerelease identifier after modulo wrap'
   );
+  assert.match(
+    versionScript,
+    /build_version="\$\{ui_version\}-\$\{preview_number\}"/,
+    'preview tauri version should use numeric-only prerelease segment for Windows MSI compatibility'
+  );
+  assert.doesNotMatch(
+    versionScript,
+    /-preview\./,
+    'preview tauri version should not include non-numeric prerelease labels'
+  );
 
   const collectStep = buildSteps.find(
     (step) => step?.name === 'Collect updater artifact + signature'

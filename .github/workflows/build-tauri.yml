@@ -239,7 +239,7 @@ jobs:
             if [ "${preview_number}" -eq 0 ]; then
               preview_number=65535
             fi
-            build_version="${ui_version}-preview.${preview_number}"
+            build_version="${ui_version}-${preview_number}"
           else
             build_version="${ui_version}"
           fi
