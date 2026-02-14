@@ -145,13 +145,18 @@ test('build-tauri workflow avoids escaped quote JS snippets and captures Apple i
   );
   assert.match(
     notarizeScript,
-    /export TAURI_PRIVATE_KEY=/,
-    'notarization should map signing key to TAURI_PRIVATE_KEY for tauri signer CLI'
+    /sign_key_path="\$\{RUNNER_TEMP\}\/tauri-updater-signing-key\.pem"/,
+    'notarization should materialize the updater signing key to a temp pem file'
   );
   assert.match(
     notarizeScript,
-    /TAURI_PRIVATE_KEY_PASSWORD/,
-    'notarization should map signing password to TAURI_PRIVATE_KEY_PASSWORD for tauri signer CLI'
+    /tauri signer sign --private-key-path "\$\{sign_key_path\}" --password "\$\{TAURI_SIGNING_PRIVATE_KEY_PASSWORD\}"/,
+    'notarization should pass signer key path/password flags explicitly to tauri signer CLI'
+  );
+  assert.doesNotMatch(
+    notarizeScript,
+    /export TAURI_PRIVATE_KEY=/,
+    'notarization should not rely on TAURI_PRIVATE_KEY env decoding semantics'
   );
   assert.match(
     notarizeScript,

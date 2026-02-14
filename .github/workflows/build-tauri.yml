@@ -389,14 +389,15 @@ jobs:
           artifact_abs="$(cd "$(dirname "${artifact_path}")" && pwd)/$(basename "${artifact_path}")"
           sig_abs="$(cd "$(dirname "${sig_path}")" && pwd)/$(basename "${sig_path}")"
           tmp_sig="${work}/notarized.sig"
+          sign_key_path="${RUNNER_TEMP}/tauri-updater-signing-key.pem"
           normalized_tauri_signing_key="$(node -e 'const raw=String(process.env.TAURI_SIGNING_PRIVATE_KEY ?? ""); process.stdout.write(raw.includes("\\n") ? raw.replaceAll("\\n", "\n") : raw);')"
           if printf "%s" "${normalized_tauri_signing_key}" | grep -q "BEGIN"; then
-            export TAURI_PRIVATE_KEY="${normalized_tauri_signing_key}"
+            printf "%s" "${normalized_tauri_signing_key}" > "${sign_key_path}"
           else
-            export TAURI_PRIVATE_KEY="$(printf "%s" "${normalized_tauri_signing_key}" | base64 --decode)"
+            printf "%s" "${normalized_tauri_signing_key}" | base64 --decode > "${sign_key_path}"
           fi
-          export TAURI_PRIVATE_KEY_PASSWORD="${TAURI_SIGNING_PRIVATE_KEY_PASSWORD}"
-          yarn --silent tauri signer sign "${artifact_abs}" > "${tmp_sig}"
+          chmod 600 "${sign_key_path}"
+          yarn --silent tauri signer sign --private-key-path "${sign_key_path}" --password "${TAURI_SIGNING_PRIVATE_KEY_PASSWORD}" "${artifact_abs}" > "${tmp_sig}"
           sig_value="$(tr -d '\r\n' < "${tmp_sig}")"
           if [ -z "${sig_value}" ] || ! printf "%s" "${sig_value}" | grep -Eq '^[A-Za-z0-9+/=]+$'; then
             echo "Generated updater signature is invalid: ${tmp_sig}" >&2
