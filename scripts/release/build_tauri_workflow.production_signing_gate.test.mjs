@@ -55,3 +55,27 @@ test('production macOS tauri workflow hard-fails when signing/notarization secre
     'workflow must not silently warn-and-continue for production notarization gaps'
   );
 });
+
+test('build-tauri workflow avoids escaped quote JS snippets and captures Apple identity robustly', async () => {
+  const workflow = await readFile(workflowPath, 'utf8');
+  const parsed = parse(workflow);
+  const buildSteps = parsed?.jobs?.build?.steps;
+  assert.ok(Array.isArray(buildSteps), 'build-tauri workflow should define jobs.build.steps');
+
+  assert.doesNotMatch(
+    workflow,
+    /require\(\\"/,
+    'build-tauri workflow must not escape quotes inside node -p/-e snippets'
+  );
+
+  const resolveIdentityStep = buildSteps.find(
+    (step) => step?.name === 'Resolve Apple signing identity (macOS)'
+  );
+  assert.ok(resolveIdentityStep, 'workflow should contain Apple signing identity resolution step');
+  const runScript = String(resolveIdentityStep.run ?? '');
+  assert.match(
+    runScript,
+    /security find-identity -v -p codesigning 2>&1/,
+    'identity lookup should capture stderr output so valid identities are parsed reliably'
+  );
+});
