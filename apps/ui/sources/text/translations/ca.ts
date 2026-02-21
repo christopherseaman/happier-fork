@@ -1059,6 +1059,7 @@ deps: {
         model: {
             title: 'MODEL',
             configureInCli: 'Configura els models a la configuració del CLI',
+            useCliSettings: 'Use CLI settings',
         },
         codexPermissionMode: {
             title: 'MODE DE PERMISOS CODEX',

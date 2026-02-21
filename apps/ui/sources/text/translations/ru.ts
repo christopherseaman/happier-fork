@@ -1228,6 +1228,7 @@ export const ru: TranslationStructure = {
     model: {
       title: "МОДЕЛЬ",
       configureInCli: "Настройте модели в настройках CLI",
+      useCliSettings: "Use CLI settings",
     },
     codexPermissionMode: {
       title: "РЕЖИМ РАЗРЕШЕНИЙ CODEX",

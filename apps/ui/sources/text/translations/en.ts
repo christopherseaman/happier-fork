@@ -1074,6 +1074,7 @@ export const en = {
         model: {
             title: 'MODEL',
             configureInCli: 'Configure models in CLI settings',
+            useCliSettings: 'Use CLI settings',
         },
         codexPermissionMode: {
             title: 'CODEX PERMISSION MODE',

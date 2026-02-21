@@ -585,6 +585,7 @@ const zhHantOverrides: DeepPartial<TranslationStructure> = {
         model: {
             title: '模型',
             configureInCli: '在 CLI 設定中配置模型',
+            useCliSettings: 'Use CLI settings',
         },
         codexPermissionMode: {
             title: 'CODEX 權限模式',

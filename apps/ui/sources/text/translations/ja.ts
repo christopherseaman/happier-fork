@@ -1500,6 +1500,7 @@ export const ja: TranslationStructure = {
     model: {
       title: "モデル",
       configureInCli: "CLIの設定でモデルを構成",
+      useCliSettings: "Use CLI settings",
     },
     codexPermissionMode: {
       title: "CODEX権限モード",

@@ -69,11 +69,8 @@ export const AGENT_MODEL_CONFIG: Readonly<Record<AgentId, AgentModelConfig>> = O
       'claude-opus-4-1-20250805',
       'claude-opus-4-0',
       'claude-opus-4-20250514',
-      'claude-3-7-sonnet-latest',
       'claude-3-5-sonnet-latest',
       'claude-3-5-haiku-latest',
-      'claude-3-haiku',
-      'claude-3-haiku-20240307',
     ],
   },
   codex: {
