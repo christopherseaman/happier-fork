@@ -2,10 +2,11 @@
  * Low-level difftastic wrapper - just arguments in, string out
  */
 
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { join, resolve } from 'path';
 import { platform, arch } from 'os';
 import { projectPath } from '@/projectPath';
+import { isBunCompiledBinary } from '@/utils/runtime';
 
 export interface DifftasticResult {
     exitCode: number
@@ -20,7 +21,21 @@ export interface DifftasticOptions {
 /**
  * Get the platform-specific binary path
  */
+function findSystemDifft(): string | null {
+    try {
+        const cmd = process.platform === 'win32' ? 'where difft' : 'which difft';
+        return execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim().split(/\r?\n/)[0]?.trim() || null;
+    } catch {
+        return null;
+    }
+}
+
 function getBinaryPath(): string {
+    if (isBunCompiledBinary()) {
+        const systemPath = findSystemDifft();
+        if (systemPath) return systemPath;
+        // Fall through to bundled path — will fail but gives a clear error
+    }
     const platformName = platform();
     const binaryName = platformName === 'win32' ? 'difft.exe' : 'difft';
     return resolve(join(projectPath(), 'tools', 'unpacked', binaryName));

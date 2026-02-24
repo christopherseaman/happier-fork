@@ -51,3 +51,40 @@ export function getRuntime(): Runtime {
 export const isBun = (): boolean => getRuntime() === 'bun';
 export const isNode = (): boolean => getRuntime() === 'node';
 export const isDeno = (): boolean => getRuntime() === 'deno';
+
+// Compiled binary detection -- cached since it never changes during a process lifetime
+let cachedIsBunCompiledBinary: boolean | null = null;
+
+/**
+ * Detect whether the current process is a Bun-compiled single-file binary.
+ *
+ * In compiled binaries, Bun injects the bundled script as process.argv[1]
+ * with a virtual `/$bunfs/root/` prefix. This is the most reliable signal
+ * because process.execPath may report "bun" (the embedded runtime name)
+ * rather than the actual binary path in some Bun versions.
+ */
+export function isBunCompiledBinary(): boolean {
+    if (cachedIsBunCompiledBinary !== null) return cachedIsBunCompiledBinary;
+    if (!isBun()) {
+        cachedIsBunCompiledBinary = false;
+        return false;
+    }
+    const bunGlobal = (globalThis as any).Bun;
+    const mainModule: string = (bunGlobal?.main ?? '').replaceAll('\\', '/');
+    cachedIsBunCompiledBinary = mainModule.startsWith('/$bunfs/root/');
+    return cachedIsBunCompiledBinary;
+}
+
+/**
+ * Get the on-disk path to the compiled binary, or null if not a compiled binary.
+ * Falls back through process.argv[0] → process.execPath, preferring whichever
+ * is not a bare runtime name like "bun".
+ */
+export function getCompiledBinaryPath(): string | null {
+    if (!isBunCompiledBinary()) return null;
+    const argv0 = (process.argv[0] ?? '').trim();
+    if (argv0 && argv0 !== 'bun' && argv0 !== 'bun.exe') return argv0;
+    const execPath = (process.execPath ?? '').trim();
+    if (execPath && execPath !== 'bun' && execPath !== 'bun.exe') return execPath;
+    return null;
+}

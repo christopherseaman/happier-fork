@@ -3,6 +3,8 @@ import { query, type QueryOptions, type SDKMessage, type SDKSystemMessage, Abort
 import { mapToClaudeMode } from "./utils/permissionMode";
 import { join, resolve } from 'node:path';
 import { projectPath } from "@/projectPath";
+import { isBunCompiledBinary } from "@/utils/runtime";
+import { resolveClaudeCliPath } from "./utils/resolveClaudeCliPath";
 import { parseSpecialCommand } from "@/cli/parsers/specialCommands";
 import { logger } from "@/lib";
 import { PushableAsyncIterable } from "@/utils/PushableAsyncIterable";
@@ -121,6 +123,7 @@ export async function claudeRemote(opts: {
         executable: opts.jsRuntime ?? 'node',
         abort: opts.signal,
         pathToClaudeCodeExecutable: (() => {
+            if (isBunCompiledBinary()) return resolveClaudeCliPath();
             return resolve(join(projectPath(), 'scripts', 'claude_remote_launcher.cjs'));
         })(),
         settingsPath: opts.hookSettingsPath,

@@ -2,8 +2,10 @@ import os from 'os';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 
+import { dirname } from 'path';
 import { configuration } from '@/configuration';
 import { projectPath } from '@/projectPath';
+import { getCompiledBinaryPath } from '@/utils/runtime';
 import type { MachineMetadata } from '@/api/types';
 import packageJson from '../../../package.json';
 
@@ -38,6 +40,6 @@ export const initialMachineMetadata: MachineMetadata = {
   happyCliVersion: packageJson.version,
   homeDir: os.homedir(),
   happyHomeDir: configuration.happyHomeDir,
-  happyLibDir: projectPath(),
+  happyLibDir: (() => { const bp = getCompiledBinaryPath(); return bp ? dirname(bp) : projectPath(); })(),
 };
 

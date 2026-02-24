@@ -15,6 +15,7 @@ import { existsSync, readdirSync, statSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { projectPath } from '@/projectPath'
+import { isBunCompiledBinary, getCompiledBinaryPath } from '@/utils/runtime'
 import packageJson from '../../package.json'
 
 export function maskValue(value: string): string;
@@ -137,15 +138,23 @@ export async function runDoctorCommand(filter?: 'all' | 'daemon'): Promise<void>
 
         // Daemon spawn diagnostics
         console.log(chalk.bold('🔧 Daemon Spawn Diagnostics'));
-        const projectRoot = projectPath();
-        const wrapperPath = join(projectRoot, 'bin', 'happier.mjs');
-        const cliEntrypoint = join(projectRoot, 'dist', 'index.mjs');
-        
-        console.log(`Project Root: ${chalk.blue(projectRoot)}`);
-        console.log(`Wrapper Script: ${chalk.blue(wrapperPath)}`);
-        console.log(`CLI Entrypoint: ${chalk.blue(cliEntrypoint)}`);
-        console.log(`Wrapper Exists: ${existsSync(wrapperPath) ? chalk.green('✓ Yes') : chalk.red('❌ No')}`);
-        console.log(`CLI Exists: ${existsSync(cliEntrypoint) ? chalk.green('✓ Yes') : chalk.red('❌ No')}`);
+        const binaryPath = getCompiledBinaryPath();
+        if (binaryPath) {
+            console.log(`Runtime: ${chalk.green('Compiled binary')}`);
+            console.log(`Binary Path: ${chalk.blue(binaryPath)}`);
+            console.log(`Binary Exists: ${existsSync(binaryPath) ? chalk.green('✓ Yes') : chalk.red('❌ No')}`);
+        } else {
+            const projectRoot = projectPath();
+            const wrapperPath = join(projectRoot, 'bin', 'happier.mjs');
+            const cliEntrypoint = join(projectRoot, 'dist', 'index.mjs');
+
+            console.log(`Runtime: ${chalk.blue('Development (source)')}`);
+            console.log(`Project Root: ${chalk.blue(projectRoot)}`);
+            console.log(`Wrapper Script: ${chalk.blue(wrapperPath)}`);
+            console.log(`CLI Entrypoint: ${chalk.blue(cliEntrypoint)}`);
+            console.log(`Wrapper Exists: ${existsSync(wrapperPath) ? chalk.green('✓ Yes') : chalk.red('❌ No')}`);
+            console.log(`CLI Exists: ${existsSync(cliEntrypoint) ? chalk.green('✓ Yes') : chalk.red('❌ No')}`);
+        }
         console.log('');
 
         // Configuration

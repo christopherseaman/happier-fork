@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { configuration } from '@/configuration';
 import { projectPath } from '@/projectPath';
+import { getCompiledBinaryPath } from '@/utils/runtime';
 
 import { applyDaemonServiceInstallPlan, applyDaemonServiceUninstallPlan } from './apply';
 import { planDaemonServiceInstall, planDaemonServiceUninstall } from './plan';
@@ -47,8 +48,9 @@ export async function installDaemonService(options: Readonly<{
   const serverUrl = options.serverUrl ?? configuration.serverUrl;
   const webappUrl = options.webappUrl ?? configuration.webappUrl;
   const publicServerUrl = options.publicServerUrl ?? configuration.publicServerUrl;
-  const nodePath = options.nodePath ?? process.execPath;
-  const entryPath = options.entryPath ?? (looksLikeNodeExecPath(nodePath) ? join(projectPath(), 'dist', 'index.mjs') : '');
+  const binaryPath = getCompiledBinaryPath();
+  const nodePath = options.nodePath ?? (binaryPath || process.execPath);
+  const entryPath = options.entryPath ?? (binaryPath ? '' : (looksLikeNodeExecPath(nodePath) ? join(projectPath(), 'dist', 'index.mjs') : ''));
 
   const plan = planDaemonServiceInstall({
     platform,

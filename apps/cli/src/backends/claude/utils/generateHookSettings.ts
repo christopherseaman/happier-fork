@@ -11,7 +11,7 @@ import { configuration } from '@/configuration';
 import { logger } from '@/ui/logger';
 import { projectPath } from '@/projectPath';
 import { readClaudeSettings, type ClaudeSettings } from './claudeSettings';
-import { isBun } from '@/utils/runtime';
+import { isBun, isBunCompiledBinary, getCompiledBinaryPath } from '@/utils/runtime';
 
 export interface GenerateHookSettingsOptions {
     enableLocalPermissionBridge?: boolean;
@@ -37,11 +37,16 @@ export function generateHookSettingsFile(port: number, options: GenerateHookSett
     const filename = `session-hook-${process.pid}.json`;
     const filepath = join(hooksDir, filename);
 
-    // Path to the hook forwarder script
-    const forwarderScript = resolve(projectPath(), 'scripts', 'session_hook_forwarder.cjs');
-    // Prefer the current Node binary when available to avoid PATH-related failures on Windows.
-    const nodeExecutable = isBun() ? 'node' : process.execPath;
-    const hookCommand = `${JSON.stringify(nodeExecutable)} ${JSON.stringify(forwarderScript)} ${port}`;
+    // Build the hook command. Compiled binary uses `happier _hook` subcommand;
+    // development mode shells out to the CJS forwarder via node.
+    const binaryPath = getCompiledBinaryPath();
+    const hookCommand = binaryPath
+        ? `${JSON.stringify(binaryPath)} _hook session ${port}`
+        : (() => {
+            const forwarderScript = resolve(projectPath(), 'scripts', 'session_hook_forwarder.cjs');
+            const nodeExecutable = isBun() ? 'node' : process.execPath;
+            return `${JSON.stringify(nodeExecutable)} ${JSON.stringify(forwarderScript)} ${port}`;
+        })();
 
     const hooks: Record<string, unknown> = {
         SessionStart: [
@@ -58,12 +63,17 @@ export function generateHookSettingsFile(port: number, options: GenerateHookSett
     };
 
     if (options.enableLocalPermissionBridge) {
-        const permissionForwarderScript = resolve(projectPath(), 'scripts', 'permission_hook_forwarder.cjs');
         const secretPart =
             typeof options.permissionHookSecret === 'string' && options.permissionHookSecret.length > 0
                 ? ` ${JSON.stringify(options.permissionHookSecret)}`
                 : '';
-        const permissionCommand = `${JSON.stringify(nodeExecutable)} ${JSON.stringify(permissionForwarderScript)} ${port}${secretPart}`;
+        const permissionCommand = binaryPath
+            ? `${JSON.stringify(binaryPath)} _hook permission ${port}${secretPart}`
+            : (() => {
+                const permissionForwarderScript = resolve(projectPath(), 'scripts', 'permission_hook_forwarder.cjs');
+                const nodeExecutable = isBun() ? 'node' : process.execPath;
+                return `${JSON.stringify(nodeExecutable)} ${JSON.stringify(permissionForwarderScript)} ${port}${secretPart}`;
+            })();
 
         hooks.PermissionRequest = [
             {

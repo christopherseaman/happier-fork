@@ -54,7 +54,7 @@ import { basename, dirname, join } from 'node:path';
 import { projectPath } from '@/projectPath';
 import { logger } from '@/ui/logger';
 import { existsSync } from 'node:fs';
-import { isBun } from './runtime';
+import { isBun, isBunCompiledBinary, getCompiledBinaryPath } from './runtime';
 import { createRequire } from 'node:module';
 
 function getSubprocessRuntime(): 'node' | 'bun' {
@@ -165,6 +165,10 @@ function resolveCurrentProcessBundledScriptPath(): string | null {
 }
 
 function resolveSubprocessRuntimeExecutable(runtime: HappyCliSubprocessRuntime): string {
+  // Compiled binary: use the on-disk binary path directly.
+  const binaryPath = getCompiledBinaryPath();
+  if (binaryPath) return binaryPath;
+
   // Prefer the currently-running runtime binary when possible. This avoids PATH
   // issues on Windows (and GUI-launched shells) where `node`/`bun` may not resolve.
   if (runtime === 'node' && !isBun()) return process.execPath;
@@ -173,6 +177,11 @@ function resolveSubprocessRuntimeExecutable(runtime: HappyCliSubprocessRuntime):
 }
 
 export function buildHappyCliSubprocessInvocation(args: string[]): HappyCliSubprocessInvocation {
+  // Compiled binary: the binary IS the entrypoint — just re-invoke it with the new args.
+  if (isBunCompiledBinary()) {
+    return { runtime: 'bun', argv: [...args] };
+  }
+
   const entrypoint = resolveSubprocessEntrypoint();
   const runtime = getSubprocessRuntime();
 

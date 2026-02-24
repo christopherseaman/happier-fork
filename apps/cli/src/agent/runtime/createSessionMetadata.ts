@@ -8,7 +8,7 @@
  */
 
 import os from 'node:os';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 
 import type { AgentId } from '@happier-dev/agents';
 import { buildAcpSessionModeOverrideV1, buildModelOverrideV1 } from '@happier-dev/protocol';
@@ -16,6 +16,7 @@ import { buildAcpSessionModeOverrideV1, buildModelOverrideV1 } from '@happier-de
 import type { AgentState, Metadata, PermissionMode } from '@/api/types';
 import { configuration } from '@/configuration';
 import { projectPath } from '@/projectPath';
+import { getCompiledBinaryPath } from '@/utils/runtime';
 import { logger } from '@/ui/logger';
 import packageJson from '../../../package.json';
 import type { TerminalRuntimeFlags } from '@/terminal/runtime/terminalRuntimeFlags';
@@ -102,8 +103,8 @@ export function createSessionMetadata(opts: CreateSessionMetadataOptions): Sessi
         machineId: opts.machineId,
         homeDir: os.homedir(),
         happyHomeDir: configuration.happyHomeDir,
-        happyLibDir: projectPath(),
-        happyToolsDir: resolve(projectPath(), 'tools', 'unpacked'),
+        happyLibDir: (() => { const bp = getCompiledBinaryPath(); return bp ? dirname(bp) : projectPath(); })(),
+        happyToolsDir: (() => { const bp = getCompiledBinaryPath(); return bp ? '' : resolve(projectPath(), 'tools', 'unpacked'); })(),
         startedFromDaemon: opts.startedBy === 'daemon',
         hostPid: process.pid,
         sessionLogPath: logger.getLogPath(),

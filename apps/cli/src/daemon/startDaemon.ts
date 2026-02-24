@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import os from 'os';
 import { randomBytes } from 'node:crypto';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { ApiClient } from '@/api/api';
 import { serializeAxiosErrorForLog } from '@/api/client/serializeAxiosErrorForLog';
@@ -43,6 +43,7 @@ import { startDaemonHeartbeatLoop } from './lifecycle/heartbeat';
 import { createSessionRunnerRespawnManager } from './processSupervision/sessionRunnerRespawn';
 import { publishShutdownStateBestEffort } from './lifecycle/publishShutdownState';
 import { projectPath } from '@/projectPath';
+import { getCompiledBinaryPath } from '@/utils/runtime';
 import { selectPreferredTmuxSessionName, TmuxUtilities, isTmuxAvailable } from '@/integrations/tmux';
 import { resolveTerminalRequestFromSpawnOptions } from '@/terminal/runtime/terminalConfig';
 import { validateEnvVarRecordStrict } from '@/terminal/runtime/envVarSanitization';
@@ -1205,7 +1206,7 @@ export async function startDaemon(): Promise<void> {
 	                happyCliVersion: packageJson.version,
 	                homeDir: os.homedir(),
 	                happyHomeDir: configuration.happyHomeDir,
-	                happyLibDir: projectPath(),
+	                happyLibDir: (() => { const bp = getCompiledBinaryPath(); return bp ? dirname(bp) : projectPath(); })(),
 	              } as MachineMetadata;
 
 	              // If nothing changes, skip emitting an update entirely.

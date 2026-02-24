@@ -16,6 +16,8 @@ import { handleSessionCliCommand } from './commands/session/index';
 import { handleServerCliCommand } from './commands/server';
 import { handleSelfCliCommand } from './commands/self';
 import { handleSelfUpdateCliCommand } from './commands/selfUpdate';
+import { handleHookCliCommand } from './commands/hook';
+import { handleMcpBridgeCliCommand } from './commands/mcpBridge';
 
 export type CommandContext = Readonly<{
   args: string[];
@@ -54,5 +56,7 @@ export const commandRegistry: Readonly<Record<string, CommandHandler>> = {
   server: handleServerCliCommand,
   self: handleSelfCliCommand,
   'self-update': handleSelfUpdateCliCommand,
+  '_hook': handleHookCliCommand,
+  '_mcp-bridge': handleMcpBridgeCliCommand,
   ...buildAgentCommandRegistry(),
 };

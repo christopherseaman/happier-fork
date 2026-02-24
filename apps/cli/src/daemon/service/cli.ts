@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 
 import { configuration } from '@/configuration';
 import { projectPath } from '@/projectPath';
+import { getCompiledBinaryPath } from '@/utils/runtime';
 import { readDaemonState } from '@/persistence';
 
 import { installDaemonService, uninstallDaemonService } from './installer';
@@ -132,9 +133,10 @@ export function resolveDaemonServiceCliRuntimeFromEnv(): DaemonServiceCliRuntime
   const serverUrl = (process.env.HAPPIER_DAEMON_SERVICE_SERVER_URL ?? '').trim() || configuration.serverUrl;
   const webappUrl = (process.env.HAPPIER_DAEMON_SERVICE_WEBAPP_URL ?? '').trim() || configuration.webappUrl;
   const publicServerUrl = (process.env.HAPPIER_DAEMON_SERVICE_PUBLIC_SERVER_URL ?? '').trim() || configuration.publicServerUrl;
-  const nodePath = (process.env.HAPPIER_DAEMON_SERVICE_NODE_PATH ?? '').trim() || process.execPath;
+  const binaryPath = getCompiledBinaryPath();
+  const nodePath = (process.env.HAPPIER_DAEMON_SERVICE_NODE_PATH ?? '').trim() || (binaryPath || process.execPath);
   const entryPathEnv = (process.env.HAPPIER_DAEMON_SERVICE_ENTRY_PATH ?? '').trim();
-  const entryPath = entryPathEnv || (looksLikeNodeExecPath(nodePath) ? join(projectPath(), 'dist', 'index.mjs') : '');
+  const entryPath = entryPathEnv || (binaryPath ? '' : (looksLikeNodeExecPath(nodePath) ? join(projectPath(), 'dist', 'index.mjs') : ''));
 
   return { platform, instanceId, uid, userHomeDir, happierHomeDir, serverUrl, webappUrl, publicServerUrl, nodePath, entryPath };
 }

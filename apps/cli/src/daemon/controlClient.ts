@@ -284,11 +284,17 @@ export async function isDaemonRunningCurrentlyInstalledHappyVersion(): Promise<b
   }
   
   try {
-    // Read package.json on demand from disk - so we are guaranteed to get the latest version
-    const packageJsonPath = join(projectPath(), 'package.json');
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
-    const currentCliVersion = packageJson.version;
-    
+    // Read package.json on demand from disk - so we are guaranteed to get the latest version.
+    // In compiled binary mode, the version is baked in and package.json doesn't exist on disk,
+    // so fall back to the build-time version from configuration.
+    let currentCliVersion: string;
+    try {
+      const packageJsonPath = join(projectPath(), 'package.json');
+      currentCliVersion = JSON.parse(readFileSync(packageJsonPath, 'utf-8')).version;
+    } catch {
+      currentCliVersion = configuration.currentCliVersion;
+    }
+
     logger.debug(`[DAEMON CONTROL] Current CLI version: ${currentCliVersion}, Daemon started with version: ${state.startedWithCliVersion}`);
     return currentCliVersion === state.startedWithCliVersion;
   } catch (error) {
